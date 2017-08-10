@@ -194,6 +194,11 @@ export const tagDetails = (state, tag) => {
   return currentTags.filter(Map.isMap).find(t => t.get("name") === tag, Map())
 }
 
+export const tagIndex = (state, tag) => {
+  let currentTags = tags(state) || List()
+  return currentTags.filter(Map.isMap).findIndex(t => t.get("name") === tag, Map())
+}
+
 export const operationsWithTags = createSelector(
   operationsWithRootInherited,
   tags,
@@ -209,19 +214,21 @@ export const operationsWithTags = createSelector(
   }
 )
 
-export const taggedOperations = (state) => ({ getConfigs }) => {
-  let { tagsSorter, operationsSorter } = getConfigs()
-  return operationsWithTags(state)
-    .sortBy(
-      (val, key) => key, // get the name of the tag to be passed to the sorter
-      (tagA, tagB) => {
-        let sortFn = (typeof tagsSorter === "function" ? tagsSorter : sorters.tagsSorter[ tagsSorter ])
-        return (!sortFn ? null : sortFn(tagA, tagB))
-      }
-    )
-    .map((ops, tag) => {
-      let sortFn = (typeof operationsSorter === "function" ? operationsSorter : sorters.operationsSorter[ operationsSorter ])
-      let operations = (!sortFn ? ops : ops.sort(sortFn))
+export const taggedOperations = ( state ) =>( { getConfigs } ) => {
+  let { operationsSorter }= getConfigs()
+
+  // sort by the order defined in `tags` section
+  const sortedTags = operationsWithTags(state).sortBy(
+    (value, key) => key,
+    (tagA, tagB) => {
+    const tagAIndex = tagIndex(state, tagA)
+    const tagBIndex = tagIndex(state, tagB)
+    return tagAIndex - tagBIndex
+  })
+  return sortedTags.map((ops, tag) => {
+    let sortFn = typeof operationsSorter === "function" ? operationsSorter
+                                                        : sorters.operationsSorter[operationsSorter]
+    let operations = !sortFn ? ops : ops.sort(sortFn)
 
       return Map({ tagDetails: tagDetails(state, tag), operations: operations })
     })
