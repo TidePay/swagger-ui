@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+        "*",
+        "*/",
+        "!index.html",
+        "!dist/index.html",
+        "!dist/favicon-*",
+        "!dist/*.js",
+        "!dist/*.css"
+      ]
+  }
+}
